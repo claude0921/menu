@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>特色餐廳互動菜單</title>
+    <title>榕樹下菜單</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,50 +30,66 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <header class="bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 p-2.5 rounded-2xl backdrop-blur-sm">
-                    <i class="fa-solid fa-utensils text-2xl"></i>
+    <!-- 頂部固定區：標題列 + 已點摘要 + 分類篩選，捲動時永遠可見 -->
+    <div class="sticky top-0 z-30">
+        <header class="bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-3">
+                <div class="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                    <i class="fa-solid fa-utensils text-lg"></i>
                 </div>
-                <div>
-                    <h1 class="text-2xl font-bold tracking-tight">美味食堂 互動菜單</h1>
-                    <p class="text-xs text-orange-100">點擊菜品加入購物車，輕鬆完成點餐！</p>
-                </div>
+                <h1 class="text-lg font-bold tracking-tight">榕樹下菜單</h1>
             </div>
-            
-            <!-- 搜尋與購物車按鈕區 -->
-            <div class="flex items-center gap-3 w-full md:w-auto">
-                <div class="relative flex-1 md:w-72">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
-                    <input type="text" id="searchInput" placeholder="搜尋菜品名稱..." 
-                        class="w-full pl-10 pr-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white placeholder-orange-200 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm">
-                </div>
-                <button onclick="toggleCartModal()" class="relative bg-white text-orange-600 px-4 py-2 rounded-xl font-semibold text-sm shadow hover:bg-orange-50 transition flex items-center gap-2 shrink-0">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                    <span>購物車</span>
-                    <span id="cartBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span>
-                </button>
-            </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
-        <!-- 左側或頂部分類與排序控制 -->
-        <div class="lg:col-span-1 space-y-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">菜色分類</h2>
-                <div id="categoryFilters" class="flex flex-wrap lg:flex-col gap-1.5">
+        <!-- 已點摘要：新增即直接顯示，不需點開 -->
+        <div class="bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 pt-2">
+                <div class="flex items-center justify-between gap-3">
+                    <span id="summaryHeader" class="flex items-center gap-1.5 text-sm font-semibold text-slate-700 shrink-0 transition-colors">
+                        <i class="fa-solid fa-receipt text-orange-600"></i>
+                        已點 <span id="summaryCount">0</span> 項
+                    </span>
+                    <button onclick="toggleCartModal()" class="text-xs text-slate-400 hover:text-orange-600 flex items-center gap-1 shrink-0">
+                        購物車 <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- 已點品項清單：加入後立即顯示於此，數量可直接加減 -->
+                <div id="summaryItemsList" class="max-h-40 overflow-y-auto text-sm text-slate-600 divide-y divide-slate-50 my-1.5">
+                    <p class="text-slate-300 py-1 text-xs">尚未點選任何菜品</p>
+                </div>
+
+                <!-- 時價/另計提醒：一點到就立即顯示 -->
+                <p id="summaryTimePriceNote" class="hidden text-xs text-amber-600 font-semibold mb-1">
+                    <i class="fa-solid fa-circle-info"></i> 時價另計的品項未計入總價
+                </p>
+
+                <div class="flex items-center justify-between pb-2 text-sm font-bold">
+                    <span id="summaryWarning" class="hidden text-xs font-bold text-red-600 shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i> 已超過2,000
+                    </span>
+                    <span id="summaryGrandTotalWrap" class="ml-auto flex items-center gap-[2ch] text-orange-600 transition-colors">
+                        <span>總計</span>
+                        <span class="flex items-center font-mono tabular-nums">
+                            <span class="mr-[2ch]">$</span><span id="summaryGrandTotal" class="inline-block min-w-[5ch] text-right">0</span>
+                        </span>
+                    </span>
+                </div>
+
+                <!-- 分類篩選（橫向捲動） -->
+                <div id="categoryFilters" class="flex gap-1.5 overflow-x-auto pb-3">
                     <!-- 動態載入分類按鈕 -->
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">價格排序</h2>
-                <select id="sortSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
+        <div class="flex justify-between items-center mb-4 gap-3 flex-wrap">
+            <h2 id="currentCategoryTitle" class="text-xl font-bold text-slate-800">全部菜色</h2>
+            <div class="flex items-center gap-2">
+                <span id="itemCount" class="text-xs text-slate-500 bg-slate-200 px-2.5 py-1 rounded-full font-medium">共 0 項</span>
+                <select id="sortSelect" class="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
                     <option value="default">預設排序</option>
                     <option value="asc">價格由低到高 (時價除外)</option>
                     <option value="desc">價格由高到低</option>
@@ -81,23 +97,15 @@
             </div>
         </div>
 
-        <!-- 右側菜品展示網格 -->
-        <div class="lg:col-span-3">
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="currentCategoryTitle" class="text-xl font-bold text-slate-800">全部菜色</h2>
-                <span id="itemCount" class="text-xs text-slate-500 bg-slate-200 px-2.5 py-1 rounded-full font-medium">共 0 項</span>
-            </div>
+        <!-- 菜品列表網格 -->
+        <div id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+            <!-- 動態載入菜品卡片 -->
+        </div>
 
-            <!-- 菜品列表網格 -->
-            <div id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                <!-- 動態載入菜品卡片 -->
-            </div>
-
-            <!-- 無搜尋結果提示 -->
-            <div id="noResult" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-100 mt-4">
-                <i class="fa-solid fa-face-frown text-4xl text-slate-300 mb-2"></i>
-                <p class="text-slate-500 text-sm">找不到符合條件的菜品</p>
-            </div>
+        <!-- 無搜尋結果提示 -->
+        <div id="noResult" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-100 mt-4">
+            <i class="fa-solid fa-face-frown text-4xl text-slate-300 mb-2"></i>
+            <p class="text-slate-500 text-sm">找不到符合條件的菜品</p>
         </div>
     </main>
 
@@ -146,208 +154,277 @@
         // 完整的菜單資料庫（對應圖片上的所有類別與品項）
         const menuData = [
             // 蛋 ($150)
-            { id: 1, name: "番茄蛋", category: "蛋", price: 150, desc: "酸甜番茄與滑嫩蛋香的經典搭配" },
-            { id: 2, name: "蔥蛋", category: "蛋", price: 150, desc: "香氣四溢的青蔥煎蛋" },
-            { id: 3, name: "洋蔥蛋", category: "蛋", price: 150, desc: "清甜洋蔥拌炒嫩蛋" },
-            { id: 4, name: "玉米蛋", category: "蛋", price: 150, desc: "小朋友最愛的香甜玉米蛋" },
-            { id: 5, name: "辣椒炒蛋", category: "蛋", price: 150, desc: "微辣開胃的炒蛋料理" },
-            { id: 6, name: "九層塔蛋", category: "蛋", price: 150, desc: "九層塔香氣濃郁撲鼻" },
-            { id: 7, name: "韭菜蛋", category: "蛋", price: 150, desc: "韭菜獨特香氣與蛋完美結合" },
-            { id: 8, name: "荷包蛋", category: "蛋", price: 150, desc: "外酥內嫩經典荷包蛋" },
-            { id: 9, name: "蚵仔蛋", category: "蛋", price: 150, desc: "鮮美蚵仔搭配滑蛋" },
-            { id: 10, name: "蝦仁蛋", category: "蛋", price: 150, desc: "彈牙蝦仁拌炒滑蛋" },
-            { id: 11, name: "紅蘿蔔炒蛋", category: "蛋", price: 150, desc: "營養美味的紅蘿蔔炒蛋" },
+            { id: 1, name: "番茄蛋", category: "蛋", price: 150 },
+            { id: 2, name: "蔥蛋", category: "蛋", price: 150 },
+            { id: 3, name: "洋蔥蛋", category: "蛋", price: 150 },
+            { id: 4, name: "玉米蛋", category: "蛋", price: 150 },
+            { id: 5, name: "辣椒炒蛋", category: "蛋", price: 150 },
+            { id: 6, name: "九層塔蛋", category: "蛋", price: 150 },
+            { id: 7, name: "韭菜蛋", category: "蛋", price: 150 },
+            { id: 8, name: "荷包蛋", category: "蛋", price: 150 },
+            { id: 9, name: "蚵仔蛋", category: "蛋", price: 150 },
+            { id: 10, name: "蝦仁蛋", category: "蛋", price: 150 },
+            { id: 11, name: "紅蘿蔔炒蛋", category: "蛋", price: 150 },
 
             // 青菜 ($150 - 部分時價)
-            { id: 12, name: "A菜", category: "青菜", price: 150, desc: "新鮮翠綠季節時蔬" },
-            { id: 13, name: "高麗菜", category: "青菜", price: 150, desc: "香甜爽脆高麗菜" },
-            { id: 14, name: "空心菜 (時蔬)", category: "青菜", price: 150, desc: "大火快炒清脆空心菜" },
-            { id: 15, name: "菠菜 (時蔬)", category: "青菜", price: 150, desc: "營養豐富鮮嫩菠菜" },
-            { id: 16, name: "山蘇 (時價)", category: "青菜", price: 0, desc: "山產特選清脆山蘇（時價）" },
-            { id: 17, name: "皇宮菜", category: "青菜", category: "青菜", price: 150, desc: "口感滑嫩皇宮菜" },
-            { id: 18, name: "大陸妹", category: "青菜", price: 150, desc: "清甜鮮脆大陸妹" },
-            { id: 19, name: "青江菜", category: "青菜", price: 150, desc: "新鮮翠綠青江菜" },
-            { id: 20, name: "扁魚白菜", category: "青菜", price: 150, desc: "扁魚乾香氣融入白菜" },
-            { id: 21, name: "青花菜", category: "青菜", price: 150, desc: "健康營養青花椰菜" },
-            { id: 22, name: "白菜", category: "青菜", price: 150, desc: "鮮甜大白菜" },
-            { id: 23, name: "莧菜", category: "青菜", price: 150, desc: "軟嫩營養莧菜" },
-            { id: 24, name: "油菜", category: "青菜", price: 150, desc: "家常經典油菜" },
-            { id: 25, name: "小白菜", category: "青菜", price: 150, desc: "清爽小白菜" },
-            { id: 26, name: "炒秋葵 (時價)", category: "青菜", price: 0, desc: "營養美味秋葵（時價）" },
-            { id: 27, name: "芹菜豆包", category: "青菜", price: 150, desc: "芹菜清香搭配豆包" },
+            { id: 12, name: "A菜", category: "青菜", price: 150 },
+            { id: 13, name: "高麗菜", category: "青菜", price: 150 },
+            { id: 14, name: "空心菜 (時蔬)", category: "青菜", price: 150 },
+            { id: 15, name: "菠菜 (時蔬)", category: "青菜", price: 150 },
+            { id: 16, name: "山蘇 (時價)", category: "青菜", price: 0 },
+            { id: 17, name: "皇宮菜", category: "青菜", price: 150 },
+            { id: 18, name: "大陸妹", category: "青菜", price: 150 },
+            { id: 19, name: "青江菜", category: "青菜", price: 150 },
+            { id: 20, name: "扁魚白菜", category: "青菜", price: 150 },
+            { id: 21, name: "青花菜", category: "青菜", price: 150 },
+            { id: 22, name: "白菜", category: "青菜", price: 150 },
+            { id: 23, name: "莧菜", category: "青菜", price: 150 },
+            { id: 24, name: "油菜", category: "青菜", price: 150 },
+            { id: 25, name: "小白菜", category: "青菜", price: 150 },
+            { id: 26, name: "炒秋葵 (時價)", category: "青菜", price: 0 },
+            { id: 27, name: "芹菜豆包", category: "青菜", price: 150 },
 
             // 炸物 ($300)
-            { id: 28, name: "豬排", category: "炸物", price: 300, desc: "外酥內嫩黃金炸豬排" },
-            { id: 29, name: "卡拉雞排", category: "炸物", price: 300, desc: "酥脆多汁卡拉雞排" },
-            { id: 30, name: "辣味雞排", category: "炸物", price: 300, desc: "香辣帶勁酥炸雞排" },
-            { id: 31, name: "泰式八寶丸", category: "炸物", price: 300, desc: "外酥內彈泰式風味丸子" },
-            { id: 32, name: "酥炸棒腿", category: "炸物", price: 300, desc: "一口接一口酥脆雞棒腿" },
-            { id: 33, name: "士林大香腸", category: "炸物", price: 300, desc: "經典夜市大香腸" },
-            { id: 34, name: "脆皮燒肉", category: "炸物", price: 300, desc: "外皮酥脆多汁燒肉" },
-            { id: 35, name: "蚵捲", category: "炸物", price: 300, desc: "鮮蚵包裹酥炸外皮" },
-            { id: 36, name: "鹹酥雞軟骨", category: "炸物", price: 300, desc: "卡滋卡滋下酒好菜" },
-            { id: 37, name: "魚排", category: "炸物", price: 300, desc: "金黃酥脆鮮魚排" },
-            { id: 38, name: "泰式雞捲", category: "炸物", price: 300, desc: "酸甜沾醬搭配酥脆雞捲" },
-            { id: 39, name: "炸骨腿", category: "炸物", price: 300, desc: "香酥全骨雞腿" },
-            { id: 40, name: "餃子雞球", category: "炸物", price: 300, desc: "創意酥炸點心雞球" },
+            { id: 28, name: "豬排", category: "炸物", price: 300 },
+            { id: 29, name: "卡拉雞排", category: "炸物", price: 300 },
+            { id: 30, name: "辣味雞排", category: "炸物", price: 300 },
+            { id: 31, name: "泰式八寶丸", category: "炸物", price: 300 },
+            { id: 32, name: "酥炸棒腿", category: "炸物", price: 300 },
+            { id: 33, name: "士林大香腸", category: "炸物", price: 300 },
+            { id: 34, name: "脆皮燒肉", category: "炸物", price: 300 },
+            { id: 35, name: "蚵捲", category: "炸物", price: 300 },
+            { id: 36, name: "鹹酥雞軟骨", category: "炸物", price: 300 },
+            { id: 37, name: "魚排", category: "炸物", price: 300 },
+            { id: 38, name: "泰式雞捲", category: "炸物", price: 300 },
+            { id: 39, name: "炸骨腿", category: "炸物", price: 300 },
+            { id: 40, name: "餃子雞球", category: "炸物", price: 300 },
 
             // 雞肉 ($280)
-            { id: 41, name: "宮保雞丁", category: "雞肉", price: 280, desc: "香辣微麻經典川菜" },
-            { id: 42, name: "三杯雞", category: "雞肉", price: 280, desc: "麻油、米酒、醬油香氣四溢" },
-            { id: 43, name: "麻油雞", category: "雞肉", price: 280, desc: "溫潤補身濃郁麻油香" },
-            { id: 44, name: "蜜汁雞丁", category: "雞肉", price: 280, desc: "甜美蜜汁包裹鮮嫩雞丁" },
-            { id: 45, name: "蔥爆雞丁", category: "雞肉", price: 280, desc: "大量青蔥爆炒鮮嫩雞肉" },
-            { id: 46, name: "香菇蒸雞", category: "雞肉", price: 280, desc: "清甜香菇原汁蒸煮雞肉" },
-            { id: 47, name: "咖哩雞肉", category: "雞肉", price: 280, desc: "濃郁南洋咖哩香氣" },
-            { id: 48, name: "剝皮辣椒雞丁", category: "雞肉", price: 280, desc: "微辣甘甜剝皮辣椒風味" },
-            { id: 49, name: "韓式辣醬雞", category: "雞肉", price: 280, desc: "酸甜微辣韓風口味" },
-            { id: 50, name: "炸雞腿", category: "雞肉", price: 280, desc: "酥脆多汁招牌雞腿" },
-            { id: 51, name: "黃燜雞", category: "雞肉", price: 280, desc: "醇厚醬香特色燜煮雞肉" },
+            { id: 41, name: "宮保雞丁", category: "雞肉", price: 280 },
+            { id: 42, name: "三杯雞", category: "雞肉", price: 280 },
+            { id: 43, name: "麻油雞", category: "雞肉", price: 280 },
+            { id: 44, name: "蜜汁雞丁", category: "雞肉", price: 280 },
+            { id: 45, name: "蔥爆雞丁", category: "雞肉", price: 280 },
+            { id: 46, name: "香菇蒸雞", category: "雞肉", price: 280 },
+            { id: 47, name: "咖哩雞肉", category: "雞肉", price: 280 },
+            { id: 48, name: "剝皮辣椒雞丁", category: "雞肉", price: 280 },
+            { id: 49, name: "韓式辣醬雞", category: "雞肉", price: 280 },
+            { id: 50, name: "炸雞腿", category: "雞肉", price: 280 },
+            { id: 51, name: "黃燜雞", category: "雞肉", price: 280 },
 
             // 豬肉 ($280 - 另含滷肉備註)
-            { id: 52, name: "客家小炒", category: "豬肉", price: 280, desc: "魷魚、五花肉、豆乾爆香經典" },
-            { id: 53, name: "打拋豬", category: "豬肉", price: 280, desc: "香辣下飯泰式打拋豬" },
-            { id: 54, name: "蔥爆豬柳", category: "豬肉", price: 280, desc: "滑嫩豬柳佐以翠綠青蔥" },
-            { id: 55, name: "糖醋豬柳", category: "豬肉", price: 280, desc: "酸甜開胃豬柳料理" },
-            { id: 56, name: "芥藍豬柳", category: "豬肉", price: 280, desc: "爽脆芥藍搭滑嫩豬柳" },
-            { id: 57, name: "黑胡椒豬柳", category: "豬肉", price: 280, desc: "濃郁黑胡椒辛香料風味" },
-            { id: 58, name: "麻油豬心", category: "豬肉", price: 280, desc: "香濃麻油細火烹調豬心" },
-            { id: 59, name: "麻油豬肝", category: "豬肉", price: 280, desc: "軟嫩麻油香氣豬肝" },
-            { id: 60, name: "糖醋咕咾肉", category: "豬肉", price: 280, desc: "外酥內嫩酸甜好滋味" },
-            { id: 61, name: "粉蒸肉", category: "豬肉", price: 280, desc: "香糯軟爛特色粉蒸肉" },
-            { id: 62, name: "蒜香鹹豬肉", category: "豬肉", price: 280, desc: "鹹香夠味佐蒜片" },
-            { id: 63, name: "豆酸排骨", category: "豬肉", price: 280, desc: "獨特風味酸香排骨" },
-            { id: 64, name: "營裡紅", category: "豬肉", price: 280, desc: "傳統特色風味料理" },
-            { id: 65, name: "蒜泥白肉", category: "豬肉", price: 280, desc: "川燙三層肉佐特調蒜泥醬" },
-            { id: 66, name: "沙茶肉片", category: "豬肉", price: 280, desc: "濃郁沙茶香氣肉片" },
-            { id: 67, name: "泡菜炒豬", category: "豬肉", price: 280, desc: "微酸微辣泡菜炒豬肉" },
-            { id: 68, name: "蔥爆香腸", category: "豬肉", price: 280, desc: "香腸切片蔥爆翻炒" },
-            { id: 69, name: "四季肥腸", category: "豬肉", price: 280, desc: "酥脆肥腸搭配四季豆" },
-            { id: 70, name: "滷肉 (須詢問是否有貨)", category: "豬肉", price: 280, desc: "香濃入味古早味滷肉" },
+            { id: 52, name: "客家小炒", category: "豬肉", price: 280 },
+            { id: 53, name: "打拋豬", category: "豬肉", price: 280 },
+            { id: 54, name: "蔥爆豬柳", category: "豬肉", price: 280 },
+            { id: 55, name: "糖醋豬柳", category: "豬肉", price: 280 },
+            { id: 56, name: "芥藍豬柳", category: "豬肉", price: 280 },
+            { id: 57, name: "黑胡椒豬柳", category: "豬肉", price: 280 },
+            { id: 58, name: "麻油豬心", category: "豬肉", price: 280 },
+            { id: 59, name: "麻油豬肝", category: "豬肉", price: 280 },
+            { id: 60, name: "糖醋咕咾肉", category: "豬肉", price: 280 },
+            { id: 61, name: "粉蒸肉", category: "豬肉", price: 280 },
+            { id: 62, name: "蒜香鹹豬肉", category: "豬肉", price: 280 },
+            { id: 63, name: "豆酸排骨", category: "豬肉", price: 280 },
+            { id: 64, name: "營裡紅", category: "豬肉", price: 280 },
+            { id: 65, name: "蒜泥白肉", category: "豬肉", price: 280 },
+            { id: 66, name: "沙茶肉片", category: "豬肉", price: 280 },
+            { id: 67, name: "泡菜炒豬", category: "豬肉", price: 280 },
+            { id: 68, name: "蔥爆香腸", category: "豬肉", price: 280 },
+            { id: 69, name: "四季肥腸", category: "豬肉", price: 280 },
+            { id: 70, name: "滷肉 (須詢問是否有貨)", category: "豬肉", price: 280 },
 
             // 牛肉 ($320)
-            { id: 71, name: "蔥爆牛肉", category: "牛肉", price: 320, desc: "鮮嫩牛肉大火快炒青蔥" },
-            { id: 72, name: "宮保牛肉", category: "牛肉", price: 320, desc: "麻辣過癮宮保風味牛肉" },
-            { id: 73, name: "芥藍牛肉", category: "牛肉", price: 320, desc: "經典絕配芥藍炒牛肉" },
-            { id: 74, name: "滷牛腱", category: "牛肉", price: 320, desc: "切片滷牛腱軟嫩入味" },
-            { id: 75, name: "酸白菜炒牛肉", category: "牛肉", price: 320, desc: "酸菜香氣提味牛肉片" },
-            { id: 76, name: "糖醋牛肉", category: "牛肉", price: 320, desc: "酸甜醬汁拌炒牛肉" },
-            { id: 77, name: "黑胡椒牛肉", category: "牛肉", price: 320, desc: "濃郁黑胡椒辛香牛肉" },
-            { id: 78, name: "紅燒牛肉", category: "牛肉", price: 320, desc: "濃郁紅燒醬汁燉煮" },
+            { id: 71, name: "蔥爆牛肉", category: "牛肉", price: 320 },
+            { id: 72, name: "宮保牛肉", category: "牛肉", price: 320 },
+            { id: 73, name: "芥藍牛肉", category: "牛肉", price: 320 },
+            { id: 74, name: "滷牛腱", category: "牛肉", price: 320 },
+            { id: 75, name: "酸白菜炒牛肉", category: "牛肉", price: 320 },
+            { id: 76, name: "糖醋牛肉", category: "牛肉", price: 320 },
+            { id: 77, name: "黑胡椒牛肉", category: "牛肉", price: 320 },
+            { id: 78, name: "紅燒牛肉", category: "牛肉", price: 320 },
 
             // 小炒 ($250)
-            { id: 79, name: "鹹蛋苦瓜", category: "小炒", price: 250, desc: "鹹香蛋黃包裹翠綠苦瓜" },
-            { id: 80, name: "丁香花生", category: "小炒", price: 250, desc: "酥脆小魚乾與香脆花生" },
-            { id: 81, name: "三杯杏鮑菇", category: "小炒", price: 250, desc: "三杯風味Q彈杏鮑菇" },
-            { id: 82, name: "金沙杏鮑菇", category: "小炒", price: 250, desc: "金沙鹹蛋黃裹杏鮑菇" },
-            { id: 83, name: "宮保皮蛋", category: "小炒", price: 250, desc: "香辣夠味皮蛋料理" },
-            { id: 84, name: "金沙豆腐", category: "小炒", price: 250, desc: "外酥內嫩豆腐裹鹹蛋黃" },
-            { id: 85, name: "三杯豆腐", category: "小炒", price: 250, desc: "濃郁三杯醬汁燒豆腐" },
-            { id: 86, name: "豆豉苦瓜", category: "小炒", price: 250, desc: "甘苦回甘豆豉風味" },
-            { id: 87, name: "金沙南瓜", category: "小炒", price: 250, desc: "綿密南瓜裹金沙鹹香" },
+            { id: 79, name: "鹹蛋苦瓜", category: "小炒", price: 250 },
+            { id: 80, name: "丁香花生", category: "小炒", price: 250 },
+            { id: 81, name: "三杯杏鮑菇", category: "小炒", price: 250 },
+            { id: 82, name: "金沙杏鮑菇", category: "小炒", price: 250 },
+            { id: 83, name: "宮保皮蛋", category: "小炒", price: 250 },
+            { id: 84, name: "金沙豆腐", category: "小炒", price: 250 },
+            { id: 85, name: "三杯豆腐", category: "小炒", price: 250 },
+            { id: 86, name: "豆豉苦瓜", category: "小炒", price: 250 },
+            { id: 87, name: "金沙南瓜", category: "小炒", price: 250 },
 
             // 海鮮 ($350)
-            { id: 88, name: "三杯小卷", category: "海鮮", price: 350, desc: "Q彈鮮美三杯小卷" },
-            { id: 89, name: "塔香螺肉", category: "海鮮", price: 350, desc: "九層塔香爆炒螺肉" },
-            { id: 90, name: "塔香帆立貝", category: "海鮮", price: 350, desc: "鮮甜帆立貝佐九層塔" },
-            { id: 91, name: "金沙花枝", category: "海鮮", price: 350, desc: "鮮甜花枝包裹鹹蛋黃" },
-            { id: 92, name: "生炒花枝", category: "海鮮", price: 350, desc: "爽脆鮮甜生炒花枝" },
-            { id: 93, name: "金沙蝦球", category: "海鮮", price: 350, desc: "酥脆大蝦球裹金沙" },
-            { id: 94, name: "糖醋蝦球", category: "海鮮", price: 350, desc: "酸甜醬汁鮮蝦球" },
-            { id: 95, name: "宮保蝦球", category: "海鮮", price: 350, desc: "香辣過癮蝦球料理" },
-            { id: 96, name: "芹菜花枝", category: "海鮮", price: 350, desc: "芹菜清香拌炒花枝" },
+            { id: 88, name: "三杯小卷", category: "海鮮", price: 350 },
+            { id: 89, name: "塔香螺肉", category: "海鮮", price: 350 },
+            { id: 90, name: "塔香帆立貝", category: "海鮮", price: 350 },
+            { id: 91, name: "金沙花枝", category: "海鮮", price: 350 },
+            { id: 92, name: "生炒花枝", category: "海鮮", price: 350 },
+            { id: 93, name: "金沙蝦球", category: "海鮮", price: 350 },
+            { id: 94, name: "糖醋蝦球", category: "海鮮", price: 350 },
+            { id: 95, name: "宮保蝦球", category: "海鮮", price: 350 },
+            { id: 96, name: "芹菜花枝", category: "海鮮", price: 350 },
 
             // 魚 (時價)
-            { id: 97, name: "煎鹹魚", category: "魚", price: 0, desc: "傳統鹹香酥煎魚" },
-            { id: 98, name: "鱈魚 (煎/蒸/糖醋/紅燒)", category: "魚", price: 0, desc: "鮮嫩多汁鱈魚（多種烹調法）" },
-            { id: 99, name: "鱸魚 (清蒸/紅燒/糖醋)", category: "魚", price: 0, desc: "鮮美鱸魚（多種烹調法）" },
-            { id: 100, name: "煎白帶魚", category: "魚", price: 0, desc: "香煎白帶魚特有香氣" },
-            { id: 101, name: "香煎魚肚 (一份兩塊)", category: "魚", price: 0, desc: "油脂豐富香煎魚肚" },
-            { id: 102, name: "煎虱目魚腸 (限量)", category: "魚", price: 0, desc: "老饕限定香煎魚腸" },
-            { id: 103, name: "吳郭魚 (煎/鹽蒸)", category: "魚", price: 0, desc: "鮮美吳郭魚料理" },
-            { id: 104, name: "蒲燒鰻", category: "魚", price: 0, desc: "日式蒲燒醬香鰻魚" },
-            { id: 105, name: "紅燒土托", category: "魚", price: 0, desc: "濃郁紅燒土魠魚" },
-            { id: 106, name: "椒鹽土托", category: "魚", price: 0, desc: "外酥內嫩椒鹽土魠魚" },
-            { id: 107, name: "蜜汁喜相逢", category: "魚", price: 0, desc: "甜美蜜汁多卵喜相逢" },
-            { id: 108, name: "鮭魚 (煎/鹽蒸)", category: "魚", price: 0, desc: "營養豐富美味鮭魚" },
+            { id: 97, name: "煎鹹魚", category: "魚", price: 0 },
+            { id: 98, name: "鱈魚 (煎/蒸/糖醋/紅燒)", category: "魚", price: 0 },
+            { id: 99, name: "鱸魚 (清蒸/紅燒/糖醋)", category: "魚", price: 0 },
+            { id: 100, name: "煎白帶魚", category: "魚", price: 0 },
+            { id: 101, name: "香煎魚肚 (一份兩塊)", category: "魚", price: 0 },
+            { id: 102, name: "煎虱目魚腸 (限量)", category: "魚", price: 0 },
+            { id: 103, name: "吳郭魚 (煎/鹽蒸)", category: "魚", price: 0 },
+            { id: 104, name: "蒲燒鰻", category: "魚", price: 0 },
+            { id: 105, name: "紅燒土托", category: "魚", price: 0 },
+            { id: 106, name: "椒鹽土托", category: "魚", price: 0 },
+            { id: 107, name: "蜜汁喜相逢", category: "魚", price: 0 },
+            { id: 108, name: "鮭魚 (煎/鹽蒸)", category: "魚", price: 0 },
 
             // 乾貨 / 雜糧 (價格各異)
-            { id: 109, name: "蒜味花生", category: "乾貨/雜糧", price: 150, desc: "濃郁蒜香酥脆花生" },
-            { id: 110, name: "牛肉乾", category: "乾貨/雜糧", price: 1050, desc: "嚼勁十足香濃牛肉乾" },
-            { id: 111, name: "蜜汁肉干", category: "乾貨/雜糧", price: 850, desc: "香甜多汁蜜汁肉乾" },
-            { id: 112, name: "原味肉乾", category: "乾貨/雜糧", price: 850, desc: "經典原味香烤肉乾" },
-            { id: 113, name: "泰式肉乾", category: "乾貨/雜糧", price: 850, desc: "微辣南洋風味肉乾" },
-            { id: 114, name: "原味肉鬆", category: "乾貨/雜糧", price: 850, desc: "酥香綿密原味肉鬆" },
-            { id: 115, name: "海苔肉鬆", category: "乾貨/雜糧", price: 850, desc: "加入海苔芝麻香氣肉鬆" },
-            { id: 116, name: "腰果", category: "乾貨/雜糧", price: 850, desc: "香脆可口天然腰果" },
-            { id: 117, name: "綜合堅果", category: "乾貨/雜糧", price: 850, desc: "健康營養綜合堅果" },
+            { id: 109, name: "蒜味花生", category: "乾貨/雜糧", price: 150 },
+            { id: 110, name: "牛肉乾", category: "乾貨/雜糧", price: 1050 },
+            { id: 111, name: "蜜汁肉干", category: "乾貨/雜糧", price: 850 },
+            { id: 112, name: "原味肉乾", category: "乾貨/雜糧", price: 850 },
+            { id: 113, name: "泰式肉乾", category: "乾貨/雜糧", price: 850 },
+            { id: 114, name: "原味肉鬆", category: "乾貨/雜糧", price: 850 },
+            { id: 115, name: "海苔肉鬆", category: "乾貨/雜糧", price: 850 },
+            { id: 116, name: "腰果", category: "乾貨/雜糧", price: 850 },
+            { id: 117, name: "綜合堅果", category: "乾貨/雜糧", price: 850 },
 
             // 另類 (時價)
-            { id: 118, name: "蔥抓餅", category: "另類", price: 0, desc: "外酥內Q層次豐富蔥抓餅（時價）" },
-            { id: 119, name: "煎餃", category: "另類", price: 0, desc: "底部金黃酥脆煎餃（時價）" },
-            { id: 120, name: "炒飯", category: "另類", price: 0, desc: "粒粒分明家常炒飯（時價）" },
-            { id: 121, name: "炒麵", category: "另類", price: 0, desc: "香濃醬汁大火炒麵（時價）" },
-            { id: 122, name: "炒烏龍麵", category: "另類", price: 0, desc: "Q彈日式炒烏龍（時價）" },
-            { id: 123, name: "炒意麵", category: "另類", price: 0, desc: "吸附湯汁美味意麵（時價）" },
-            { id: 124, name: "肉粽", category: "另類", price: 0, desc: "傳統香濃古早味肉粽（時價）" },
-            { id: 125, name: "大腸香腸", category: "另類", price: 0, desc: "經典夜市組合（時價）" },
+            { id: 118, name: "蔥抓餅", category: "另類", price: 0 },
+            { id: 119, name: "煎餃", category: "另類", price: 0 },
+            { id: 120, name: "炒飯", category: "另類", price: 0 },
+            { id: 121, name: "炒麵", category: "另類", price: 0 },
+            { id: 122, name: "炒烏龍麵", category: "另類", price: 0 },
+            { id: 123, name: "炒意麵", category: "另類", price: 0 },
+            { id: 124, name: "肉粽", category: "另類", price: 0 },
+            { id: 125, name: "大腸香腸", category: "另類", price: 0 },
 
             // 外食 (價格另計/時價)
-            { id: 126, name: "必勝客", category: "外食", price: 0, desc: "代購披薩（價格另計）" },
-            { id: 127, name: "麥當勞", category: "外食", price: 0, desc: "代購速食（價格另計）" },
-            { id: 128, name: "胖老爹", category: "外食", price: 0, desc: "代購炸雞（價格另計）" },
-            { id: 129, name: "桶子雞", category: "外食", price: 0, desc: "皮脆肉嫩桶子雞（價格另計）" },
-            { id: 130, name: "碗糕", category: "外食", price: 0, desc: "古早味碗粿（價格另計）" },
-            { id: 131, name: "燒餅油條", category: "外食", price: 0, desc: "傳統早點組合（價格另計）" },
-            { id: 132, name: "飯丸", category: "外食", price: 0, desc: "傳統飯糰（價格另計）" },
-            { id: 133, name: "肉包", category: "外食", price: 0, desc: "多汁鮮肉包（價格另計）" },
-            { id: 134, name: "卦包", category: "外食", price: 0, desc: "割包夾控肉（價格另計）" },
-            { id: 135, name: "煙燻料理", category: "外食", price: 0, desc: "特色煙燻美食（價格另計）" },
-            { id: 136, name: "水果 (時價)", category: "外食", price: 0, desc: "季節新鮮水果（時價）" },
+            { id: 126, name: "必勝客", category: "外食", price: 0 },
+            { id: 127, name: "麥當勞", category: "外食", price: 0 },
+            { id: 128, name: "胖老爹", category: "外食", price: 0 },
+            { id: 129, name: "桶子雞", category: "外食", price: 0 },
+            { id: 130, name: "碗糕", category: "外食", price: 0 },
+            { id: 131, name: "燒餅油條", category: "外食", price: 0 },
+            { id: 132, name: "飯丸", category: "外食", price: 0 },
+            { id: 133, name: "肉包", category: "外食", price: 0 },
+            { id: 134, name: "卦包", category: "外食", price: 0 },
+            { id: 135, name: "煙燻料理", category: "外食", price: 0 },
+            { id: 136, name: "水果 (時價)", category: "外食", price: 0 },
 
             // 生活用品與雜項
-            { id: 137, name: "生活用品內衣 (35/UQ/涼感)", category: "生活用品", price: 35, desc: "各式內衣（35元起/UQ/涼感系列）" },
-            { id: 138, name: "內褲 (天皇/紅螞蟻/UQ)", category: "生活用品", price: 100, desc: "品牌內褲（天皇/紅螞蟻/UQ）" },
-            { id: 139, name: "雅閒香皂", category: "生活用品", price: 200, desc: "精選雅閒香皂" }
+            { id: 137, name: "生活用品內衣 (35/UQ/涼感)", category: "生活用品", price: 35 },
+            { id: 138, name: "內褲 (天皇/紅螞蟻/UQ)", category: "生活用品", price: 100 },
+            { id: 139, name: "雅閒香皂", category: "生活用品", price: 200 }
         ];
 
         let currentCategory = '全部';
         let searchQuery = '';
         let sortOrder = 'default';
         let cart = {}; // key: item id, value: { item, count }
-        let clickCounts = {}; // key: item id, value: count
+
+        // 千分號格式化（所有金額顯示都套用）
+        function fmt(n) {
+            return n.toLocaleString('en-US');
+        }
 
         // 初始化應用
         window.onload = function() {
             renderCategories();
             renderMenu();
+            renderOrderSummary();
             setupEventListeners();
         };
 
         function setupEventListeners() {
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                searchQuery = e.target.value.trim().toLowerCase();
-                renderMenu();
-            });
-
             document.getElementById('sortSelect').addEventListener('change', (e) => {
                 sortOrder = e.target.value;
                 renderMenu();
             });
         }
 
-        // 渲染分類按鈕
+        // 渲染分類按鈕（橫向捲動列）
         function renderCategories() {
             const categories = ['全部', '蛋', '青菜', '炸物', '雞肉', '豬肉', '牛肉', '小炒', '海鮮', '魚', '乾貨/雜糧', '另類', '外食', '生活用品'];
             const container = document.getElementById('categoryFilters');
-            
+
             container.innerHTML = categories.map(cat => `
-                <button onclick="setCategory('${cat}')" 
-                    class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition text-left flex justify-between items-center ${currentCategory === cat ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'}">
+                <button onclick="setCategory('${cat}')"
+                    class="shrink-0 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-1.5 ${currentCategory === cat ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'}">
                     <span>${cat}</span>
-                    <span class="text-xs opacity-75 hidden lg:inline">${cat === '全部' ? menuData.length : menuData.filter(i => i.category === cat).length}</span>
+                    <span class="text-xs opacity-75">${fmt(cat === '全部' ? menuData.length : menuData.filter(i => i.category === cat).length)}</span>
                 </button>
             `).join('');
+        }
+
+        const OVER_BUDGET_THRESHOLD = 2000;
+
+        // 渲染畫面最上方的「已點摘要」列：加入後直接顯示，超過門檻金額轉紅色警示
+        function renderOrderSummary() {
+            const cartKeys = Object.keys(cart);
+            let grandTotal = 0;
+            let totalCount = 0;
+
+            cartKeys.forEach(id => {
+                const entry = cart[id];
+                totalCount += entry.count;
+                if (entry.item.price > 0) grandTotal += entry.item.price * entry.count;
+            });
+
+            document.getElementById('summaryCount').innerText = fmt(totalCount);
+            document.getElementById('summaryGrandTotal').innerText = fmt(grandTotal);
+
+            // 已點品項清單：直接列出，不需點開；數量可直接用 +/- 按鈕調整
+            // 用固定欄寬的 grid 排版，讓「數量」欄無論金額欄內容長短都對齊在同一位置
+            const listEl = document.getElementById('summaryItemsList');
+            if (cartKeys.length === 0) {
+                listEl.innerHTML = `<p class="text-slate-300 py-1 text-xs">尚未點選任何菜品</p>`;
+            } else {
+                listEl.innerHTML = cartKeys.map(id => {
+                    const entry = cart[id];
+                    // 金額：$ 與數字固定用等寬字元排版，數字永遠預留「千位數」欄位寬度並靠右對齊
+                    const priceCell = entry.item.price > 0
+                        ? `<span class="flex items-center font-mono tabular-nums font-semibold text-slate-700"><span class="mr-[2ch]">$</span><span class="inline-block min-w-[5ch] text-right">${fmt(entry.item.price * entry.count)}</span></span>`
+                        : `<span class="text-xs text-slate-400 text-right whitespace-nowrap">時價/另計</span>`;
+
+                    return `
+                        <div class="grid grid-cols-[minmax(0,1fr)_7.5rem_6.5rem] items-center gap-[2ch] py-1.5">
+                            <span class="min-w-0 truncate">${entry.item.name}</span>
+                            <div class="flex items-center gap-1 text-xs text-slate-500">
+                                <span class="hidden sm:inline">數量</span>
+                                <button onclick="updateCartItemCount(${id}, -1)" class="w-6 h-6 bg-slate-100 hover:bg-slate-200 rounded flex items-center justify-center text-slate-600 font-bold">
+                                    <i class="fa-solid fa-minus text-[10px]"></i>
+                                </button>
+                                <span class="w-5 text-center font-semibold text-slate-700">${entry.count}</span>
+                                <button onclick="updateCartItemCount(${id}, 1)" class="w-6 h-6 bg-orange-500 hover:bg-orange-600 text-white rounded flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-end">
+                                ${priceCell}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // 時價/另計提醒：只要購物車有這類品項就立即顯示
+            const hasTimePriceItem = cartKeys.some(id => cart[id].item.price === 0);
+            document.getElementById('summaryTimePriceNote').classList.toggle('hidden', !hasTimePriceItem);
+
+            // 超過兩千元：已點區文字變紅色並顯示警示
+            const isOverBudget = grandTotal > OVER_BUDGET_THRESHOLD;
+            const header = document.getElementById('summaryHeader');
+            const totalWrap = document.getElementById('summaryGrandTotalWrap');
+            const warning = document.getElementById('summaryWarning');
+
+            header.classList.toggle('text-red-600', isOverBudget);
+            header.classList.toggle('text-slate-700', !isOverBudget);
+            totalWrap.classList.toggle('text-red-600', isOverBudget);
+            totalWrap.classList.toggle('text-orange-600', !isOverBudget);
+            warning.classList.toggle('hidden', !isOverBudget);
+            warning.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 已超過${fmt(OVER_BUDGET_THRESHOLD)}`;
         }
 
         function setCategory(cat) {
@@ -361,7 +438,7 @@
         function renderMenu() {
             let filtered = menuData.filter(item => {
                 const matchCat = currentCategory === '全部' || item.category === currentCategory;
-                const matchSearch = item.name.toLowerCase().includes(searchQuery) || item.desc.toLowerCase().includes(searchQuery);
+                const matchSearch = item.name.toLowerCase().includes(searchQuery);
                 return matchCat && matchSearch;
             });
 
@@ -376,7 +453,7 @@
             const noResult = document.getElementById('noResult');
             const itemCount = document.getElementById('itemCount');
 
-            itemCount.innerText = `共 ${filtered.length} 項`;
+            itemCount.innerText = `共 ${fmt(filtered.length)} 項`;
 
             if (filtered.length === 0) {
                 grid.innerHTML = '';
@@ -387,46 +464,21 @@
             noResult.classList.add('hidden');
 
             grid.innerHTML = filtered.map(item => {
-                const priceText = item.price === 0 ? '時價 / 另計' : `$${item.price}`;
-                const clicks = clickCounts[item.id] || 0;
+                const priceText = item.price === 0 ? '時價 / 另計' : `$${fmt(item.price)}`;
                 const inCartCount = cart[item.id] ? cart[item.id].count : 0;
 
                 return `
-                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
-                        <div>
-                            <div class="flex justify-between items-start gap-2 mb-2">
-                                <span class="text-xs px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-600 font-semibold border border-orange-100">${item.category}</span>
-                                <span class="text-base font-bold text-slate-800">${priceText}</span>
-                            </div>
-                            <h3 class="font-bold text-slate-900 text-base mb-1 group-hover:text-orange-600 transition">${item.name}</h3>
-                            <p class="text-xs text-slate-500 mb-4 line-clamp-2">${item.desc}</p>
-                        </div>
-                        
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                            <div class="text-xs text-slate-400 flex items-center gap-1">
-                                <i class="fa-solid fa-eye"></i> 點閱: <span class="font-medium text-slate-600">${clicks}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <button onclick="handleItemClick(${item.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1">
-                                    <i class="fa-solid fa-circle-info"></i> 詳細
-                                </button>
-                                <button onclick="addToCart(${item.id})" class="bg-orange-600 hover:bg-orange-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow transition flex items-center gap-1">
-                                    <i class="fa-solid fa-plus"></i> 加點 ${inCartCount > 0 ? `(${inCartCount})` : ''}
-                                </button>
-                            </div>
+                    <div class="bg-white rounded-xl px-3 py-2 border border-slate-100 shadow-sm hover:shadow-md transition flex items-center justify-between gap-2">
+                        <h3 class="font-bold text-slate-900 text-sm truncate min-w-0">${item.name}</h3>
+                        <div class="shrink-0 flex items-center gap-2">
+                            <span class="text-sm font-bold text-orange-600">${priceText}</span>
+                            <button onclick="addToCart(${item.id})" class="w-24 bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow transition flex items-center justify-center gap-1 whitespace-nowrap">
+                                <i class="fa-solid fa-plus"></i> 加點 ${inCartCount > 0 ? `(${inCartCount})` : ''}
+                            </button>
                         </div>
                     </div>
                 `;
             }).join('');
-        }
-
-        // 點擊菜品互動
-        function handleItemClick(id) {
-            if (!clickCounts[id]) clickCounts[id] = 0;
-            clickCounts[id]++;
-            const item = menuData.find(i => i.id === id);
-            showToast(`您查看了：${item.name} (${clickCounts[id]}次)`);
-            renderMenu();
         }
 
         // 購物車功能
@@ -437,7 +489,7 @@
             } else {
                 cart[id].count++;
             }
-            updateCartBadge();
+            renderOrderSummary();
             showToast(`已將「${item.name}」加入購物車`);
             renderMenu();
         }
@@ -449,24 +501,11 @@
                     delete cart[id];
                 }
             }
-            updateCartBadge();
+            renderOrderSummary();
             renderCartModalList();
             renderMenu();
         }
 
-        function updateCartBadge() {
-            const badge = document.getElementById('cartBadge');
-            let totalCount = 0;
-            for (let id in cart) {
-                totalCount += cart[id].count;
-            }
-            if (totalCount > 0) {
-                badge.innerText = totalCount;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
 
         function toggleCartModal() {
             const modal = document.getElementById('cartModal');
@@ -508,7 +547,7 @@
                     <div class="py-3 flex justify-between items-center gap-3">
                         <div class="flex-1">
                             <h4 class="font-bold text-sm text-slate-800">${entry.item.name}</h4>
-                            <p class="text-xs text-slate-500">${entry.item.price === 0 ? '時價 / 另計' : `$${entry.item.price} / 份`}</p>
+                            <p class="text-xs text-slate-500">${entry.item.price === 0 ? '時價 / 另計' : `$${fmt(entry.item.price)} / 份`}</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="updateCartItemCount(${id}, -1)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center text-slate-600 text-xs transition">
@@ -523,13 +562,13 @@
                 `;
             }).join('');
 
-            document.getElementById('totalPrice').innerText = `$${totalPrice}`;
-            document.getElementById('calcCount').innerText = totalCount;
+            document.getElementById('totalPrice').innerText = `$${fmt(totalPrice)}`;
+            document.getElementById('calcCount').innerText = fmt(totalCount);
         }
 
         function clearCart() {
             cart = {};
-            updateCartBadge();
+            renderOrderSummary();
             renderCartModalList();
             renderMenu();
             showToast('購物車已清空');
