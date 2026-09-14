@@ -76,6 +76,11 @@
                     </span>
                 </div>
 
+                <!-- 分享點單到 LINE：有點餐才顯示 -->
+                <button id="shareLineBtn" onclick="shareToLine()" class="hidden w-full mb-3 items-center justify-center gap-2 bg-[#06C755] hover:bg-[#05b34c] text-white text-sm font-semibold py-2 rounded-xl shadow transition">
+                    <i class="fa-brands fa-line text-base"></i> 分享點單到 LINE
+                </button>
+
                 <!-- 分類篩選（手機直接換行顯示，不橫向捲動） -->
                 <div id="categoryFilters" class="flex flex-wrap gap-1.5 pb-3">
                     <!-- 動態載入分類按鈕 -->
@@ -425,6 +430,43 @@
             totalWrap.classList.toggle('text-orange-600', !isOverBudget);
             warning.classList.toggle('hidden', !isOverBudget);
             warning.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 已超過${fmt(OVER_BUDGET_THRESHOLD)}`;
+
+            // 分享到 LINE 按鈕：有點餐才顯示
+            const shareBtn = document.getElementById('shareLineBtn');
+            const hasItems = cartKeys.length > 0;
+            shareBtn.classList.toggle('hidden', !hasItems);
+            shareBtn.classList.toggle('flex', hasItems);
+        }
+
+        // 把已點清單整理成文字，開啟 LINE 分享（line.me 官方分享連結，不需另外申請金鑰）
+        function shareToLine() {
+            const cartKeys = Object.keys(cart);
+            if (cartKeys.length === 0) return;
+
+            let grandTotal = 0;
+            const priceLines = [];
+            const timePriceNames = [];
+
+            cartKeys.forEach(id => {
+                const entry = cart[id];
+                if (entry.item.price > 0) {
+                    const subtotal = entry.item.price * entry.count;
+                    grandTotal += subtotal;
+                    priceLines.push(`${entry.item.name} x${entry.count}　$${fmt(subtotal)}`);
+                } else {
+                    timePriceNames.push(`${entry.item.name} x${entry.count}`);
+                }
+            });
+
+            let text = `🍽 我的點餐清單\n`;
+            text += priceLines.join('\n');
+            if (timePriceNames.length > 0) {
+                text += (priceLines.length > 0 ? '\n' : '') + `（時價/另計，未列入總價：${timePriceNames.join('、')}）`;
+            }
+            text += `\n------------------------\n總計：$${fmt(grandTotal)}`;
+
+            // 用同頁導向而非 window.open，避免被彈跳視窗攔截，手機上也能正確喚起 LINE App
+            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
         }
 
         function setCategory(cat) {
